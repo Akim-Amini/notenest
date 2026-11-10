@@ -42,6 +42,15 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
 
   const newChecklistInputRef = useRef<HTMLInputElement>(null);
 
+  const handleEditorFieldFocus = (
+    event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const field = event.currentTarget;
+    window.setTimeout(() => {
+      field.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }, 300);
+  };
+
   useEffect(() => {
     if (initialNote) {
       setType(initialNote.type || 'note');
@@ -175,9 +184,9 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
   const colorKeys = Object.keys(COLOR_CONFIGS) as PastelColor[];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="note-editor-overlay fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div
-        className={`w-full max-w-xl max-h-[92vh] flex flex-col rounded-3xl ${currentColor.bgGradient} border-2 ${currentColor.cardBorder} shadow-2xl overflow-hidden transition-colors duration-300`}
+        className={`note-editor-panel w-full max-w-xl max-h-[92vh] flex flex-col rounded-3xl ${currentColor.bgGradient} border-2 ${currentColor.cardBorder} shadow-2xl overflow-hidden transition-colors duration-300`}
       >
         {/* Modal Top Bar */}
         <div className="flex items-center justify-between px-5 pt-4 pb-2 border-b border-black/6">
@@ -258,6 +267,7 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              onFocus={handleEditorFieldFocus}
               placeholder="Title..."
               className={`w-full text-xl md:text-2xl font-bold bg-transparent placeholder-slate-400 focus:outline-none ${currentColor.textPrimary}`}
               autoFocus={!initialNote}
@@ -270,6 +280,7 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
+                onFocus={handleEditorFieldFocus}
                 placeholder="Take a note... You can write paragraphs, quick thoughts, meeting notes or ideas."
                 rows={7}
                 className={`w-full bg-transparent focus:outline-none resize-none text-sm md:text-base leading-relaxed placeholder-slate-400 ${currentColor.textPrimary}`}
@@ -330,6 +341,7 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
                       type="text"
                       value={item.text}
                       onChange={(e) => handleUpdateCheckItemText(item.id, e.target.value)}
+                      onFocus={handleEditorFieldFocus}
                       placeholder="Task item..."
                       className={`flex-1 text-xs md:text-sm bg-transparent focus:outline-none ${
                         item.completed
@@ -355,6 +367,7 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
                   type="text"
                   value={newChecklistText}
                   onChange={(e) => setNewChecklistText(e.target.value)}
+                  onFocus={handleEditorFieldFocus}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -451,6 +464,7 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
                   type="text"
                   value={newTagInput}
                   onChange={(e) => setNewTagInput(e.target.value)}
+                  onFocus={handleEditorFieldFocus}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();

@@ -18,6 +18,9 @@ const THEME_STORAGE_KEY = 'notes-and-lists-theme';
 
 export default function App() {
   const [notes, setNotes] = useState<NoteItem[]>([]);
+  const [isSmallScreen, setIsSmallScreen] = useState(
+    () => window.matchMedia('(max-width: 767px)').matches
+  );
   const [isDarkMode, setIsDarkMode] = useState(() => {
     try {
       return localStorage.getItem(THEME_STORAGE_KEY) === 'dark';
@@ -40,6 +43,16 @@ export default function App() {
 
   // Toast notifications
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    const handleScreenSizeChange = (event: MediaQueryListEvent) => {
+      setIsSmallScreen(event.matches);
+    };
+
+    mediaQuery.addEventListener('change', handleScreenSizeChange);
+    return () => mediaQuery.removeEventListener('change', handleScreenSizeChange);
+  }, []);
 
   const addToast = useCallback((text: string, actionText?: string, onAction?: () => void) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
@@ -261,18 +274,20 @@ export default function App() {
       }`}
     >
       {/* Top Navigation Header */}
-      <Header
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        onOpenCreate={handleOpenCreate}
-        totalNotes={activeNotesCount}
-        isDarkMode={isDarkMode}
-        onToggleDarkMode={() => setIsDarkMode((current) => !current)}
-      />
+      <div className="app-desktop-header">
+        <Header
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          onOpenCreate={handleOpenCreate}
+          totalNotes={activeNotesCount}
+          isDarkMode={isDarkMode}
+          onToggleDarkMode={() => setIsDarkMode((current) => !current)}
+        />
+      </div>
 
       {/* Main View Mode Content */}
-      <main className="flex-1 flex flex-col justify-start">
-        {viewMode === 'mockup' ? (
+      <main className="app-main flex-1 flex flex-col justify-start">
+        {isSmallScreen || viewMode === 'mockup' ? (
           <PhoneMockup
             notes={notes}
             onOpenCreate={handleOpenCreate}
@@ -339,7 +354,7 @@ export default function App() {
 
       {/* Toast notifications */}
       <Toast toasts={toasts} onDismiss={dismissToast} />
-      <footer className="w-full py-4 text-center text-xs text-slate-500">
+      <footer className="app-footer w-full py-4 text-center text-xs text-slate-500">
         Built by Akim Amini
       </footer>
     </div>

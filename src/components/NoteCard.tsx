@@ -63,7 +63,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         </div>
 
         {/* 3 Action Buttons: Pin, Edit, Delete */}
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="note-card-actions flex items-center gap-1 shrink-0">
           {/* Pin Button */}
           <button
             type="button"
@@ -72,7 +72,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               onTogglePin(note.id);
             }}
             title={note.isPinned ? 'Unpin note' : 'Pin to top'}
-            className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center transition-transform active:scale-90 ${
+            className={`note-card-action w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center transition-transform active:scale-90 ${
               note.isPinned
                 ? 'bg-rose-500 text-white shadow-sm'
                 : 'bg-white/80 hover:bg-white text-rose-500 shadow-xs'
@@ -93,7 +93,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               onEdit(note);
             }}
             title="Edit note"
-            className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/80 hover:bg-white text-amber-600 flex items-center justify-center shadow-xs transition-transform active:scale-90"
+            className="note-card-action w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/80 hover:bg-white text-amber-600 flex items-center justify-center shadow-xs transition-transform active:scale-90"
           >
             <Edit3 className="w-3.5 h-3.5 md:w-4 md:h-4" />
           </button>
@@ -106,7 +106,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               onDelete(note.id);
             }}
             title="Delete note"
-            className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/80 hover:bg-white text-slate-500 hover:text-rose-600 flex items-center justify-center shadow-xs transition-transform active:scale-90"
+            className="note-card-action w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/80 hover:bg-white text-slate-500 hover:text-rose-600 flex items-center justify-center shadow-xs transition-transform active:scale-90"
           >
             <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
           </button>
@@ -120,7 +120,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                   e.stopPropagation();
                   setShowMenu(!showMenu);
                 }}
-                className="w-6 h-6 rounded-full text-slate-600/70 hover:text-slate-900 flex items-center justify-center transition-colors"
+                className="note-card-action w-6 h-6 rounded-full text-slate-600/70 hover:text-slate-900 flex items-center justify-center transition-colors"
                 title="More actions"
               >
                 <MoreVertical className="w-3.5 h-3.5" />
@@ -211,7 +211,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                       onToggleChecklistItem(note.id, item.id);
                     }
                   }}
-                  className="flex items-start gap-1.5 text-left group/item cursor-pointer"
+                  className="note-checklist-item flex items-start gap-1.5 text-left group/item cursor-pointer"
                 >
                   <button
                     type="button"

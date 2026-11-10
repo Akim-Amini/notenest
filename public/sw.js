@@ -1,6 +1,6 @@
-const CACHE_PREFIX = 'notes-and-lists';
-const SHELL_CACHE = `${CACHE_PREFIX}-shell-v1`;
-const RUNTIME_CACHE = `${CACHE_PREFIX}-runtime-v1`;
+const SHELL_CACHE = 'notenest-shell-v2';
+const RUNTIME_CACHE = 'notenest-runtime-v2';
+const APP_CACHE_PREFIXES = ['notenest-', 'notes-and-lists-'];
 const APP_SCOPE = self.registration.scope;
 const APP_ROOT = new URL('./', APP_SCOPE).href;
 const INDEX_URL = new URL('index.html', APP_SCOPE).href;
@@ -48,7 +48,7 @@ self.addEventListener('activate', (event) => {
         cacheNames
           .filter(
             (cacheName) =>
-              cacheName.startsWith(CACHE_PREFIX) &&
+              APP_CACHE_PREFIXES.some((prefix) => cacheName.startsWith(prefix)) &&
               cacheName !== SHELL_CACHE &&
               cacheName !== RUNTIME_CACHE
           )

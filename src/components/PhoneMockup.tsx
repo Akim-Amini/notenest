@@ -71,9 +71,9 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
   });
 
   return (
-    <div className="flex flex-col items-center justify-center py-6 px-3 w-full max-w-xl mx-auto">
+    <div className="phone-preview-shell flex flex-col items-center justify-center py-6 px-3 w-full max-w-xl mx-auto">
       {/* Top Banner section matching Screenshot */}
-      <div className="text-center mb-6 max-w-md">
+      <div className="phone-preview-promo text-center mb-6 max-w-md">
         <h1 className="text-3xl md:text-4xl font-extrabold text-indigo-950 tracking-tight mb-2">
           NoteNest
         </h1>
@@ -151,16 +151,16 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
       </div>
 
       {/* Realistic Mobile Device Frame */}
-      <div className="relative w-full max-w-[390px] h-[780px] bg-slate-900 rounded-[50px] p-3 shadow-2xl ring-12 ring-slate-800/80">
+      <div className="phone-device-frame relative w-full max-w-[390px] h-[780px] bg-slate-900 rounded-[50px] p-3 shadow-2xl ring-12 ring-slate-800/80">
         {/* Dynamic Island / Notch */}
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 w-28 h-6 bg-black rounded-full z-40 flex items-center justify-end pr-2.5">
+        <div className="phone-device-notch absolute top-6 left-1/2 -translate-x-1/2 w-28 h-6 bg-black rounded-full z-40 flex items-center justify-end pr-2.5">
           <div className="w-2.5 h-2.5 rounded-full bg-slate-900/90 border border-slate-800" />
         </div>
 
         {/* Inner Phone Screen */}
-        <div className="relative w-full h-full bg-[#FAF7F0] rounded-[42px] overflow-hidden flex flex-col">
+        <div className="phone-device-screen relative w-full h-full bg-[#FAF7F0] rounded-[42px] overflow-hidden flex flex-col">
           {/* Status Bar */}
-          <div className="pt-3.5 px-6 pb-2 flex items-center justify-between text-xs font-semibold text-slate-900 select-none z-30">
+          <div className="phone-fake-status pt-3.5 px-6 pb-2 flex items-center justify-between text-xs font-semibold text-slate-900 select-none z-30">
             <span>9:30</span>
             <div className="flex items-center gap-1.5 text-slate-800">
               {/* Cellular Signal Icon */}
@@ -184,7 +184,7 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
           </div>
 
           {/* Top Bar matching Screenshot */}
-          <div className="px-5 pt-2 pb-2.5 flex items-center justify-between">
+          <div className="phone-app-header px-5 pt-2 pb-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-xl">📚</span>
               <h2 className="text-lg font-bold text-indigo-950 tracking-tight">
@@ -198,7 +198,7 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
               <button
                 type="button"
                 onClick={() => setShowSearch(!showSearch)}
-                className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
+                className={`phone-header-action w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
                   showSearch
                     ? 'bg-indigo-600 text-white shadow-xs'
                     : 'bg-indigo-100/80 hover:bg-indigo-200/80 text-indigo-900'
@@ -214,7 +214,7 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
                 onClick={() =>
                   setActiveFilter(activeFilter === 'pinned' ? 'all' : 'pinned')
                 }
-                className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
+                className={`phone-header-action w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
                   activeFilter === 'pinned'
                     ? 'bg-rose-500 text-white shadow-xs'
                     : 'bg-indigo-100/80 hover:bg-indigo-200/80 text-rose-600'
@@ -228,7 +228,7 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
               <button
                 type="button"
                 onClick={onOpenProfile}
-                className="w-8 h-8 rounded-xl bg-indigo-100/80 hover:bg-indigo-200/80 text-indigo-900 flex items-center justify-center transition-all"
+                className="phone-header-action w-8 h-8 rounded-xl bg-indigo-100/80 hover:bg-indigo-200/80 text-indigo-900 flex items-center justify-center transition-all"
                 title="Note stats & backups"
               >
                 <User className="w-4 h-4" />
@@ -246,14 +246,14 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search notes & lists..."
-                  className="w-full pl-8 pr-7 py-1.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="phone-search-input w-full pl-8 pr-7 py-1.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   autoFocus
                 />
                 {searchQuery && (
                   <button
                     type="button"
                     onClick={() => setSearchQuery('')}
-                    className="absolute right-2.5 text-slate-400 hover:text-slate-600"
+                    className="phone-search-clear absolute right-2.5 text-slate-400 hover:text-slate-600"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -276,7 +276,7 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveFilter(tab.id)}
-                className={`px-3 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all ${
+                className={`phone-filter-tab px-3 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all ${
                   activeFilter === tab.id
                     ? 'bg-indigo-950 text-white shadow-xs'
                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/60'
@@ -288,7 +288,7 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
           </div>
 
           {/* Scrollable Note Cards Grid (2 Columns, matching Screenshot) */}
-          <div className="flex-1 overflow-y-auto px-4 pt-1 pb-20">
+          <div className="phone-note-list flex-1 min-h-0 overflow-y-auto px-4 pt-1 pb-20">
             {filteredNotes.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 text-center px-4">
                 <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-400 mb-2">
@@ -302,7 +302,7 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-2.5 items-start">
+              <div className="phone-note-grid grid grid-cols-2 gap-2.5 items-start">
                 {filteredNotes.map((note) => (
                   <NoteCard
                     key={note.id}
@@ -321,7 +321,7 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
           </div>
 
           {/* Floating Action Button (+) centered at bottom matching screenshot */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30">
+          <div className="phone-new-note absolute bottom-6 left-1/2 -translate-x-1/2 z-30">
             <button
               type="button"
               onClick={() => onOpenCreate('note')}
@@ -333,7 +333,7 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
           </div>
 
           {/* iPhone Home Swipe Indicator Bar */}
-          <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-32 h-1 bg-slate-900/30 rounded-full z-40 pointer-events-none" />
+          <div className="phone-home-indicator absolute bottom-1.5 left-1/2 -translate-x-1/2 w-32 h-1 bg-slate-900/30 rounded-full z-40 pointer-events-none" />
         </div>
       </div>
     </div>

@@ -19,7 +19,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleDarkMode,
 }) => {
   return (
-    <header className="sticky top-0 z-40 bg-[#6B8F71] backdrop-blur-md border-b border-[#55795B] px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4 md:gap-8 transition-colors shadow-sm">
+    <header className="app-desktop-header-bar sticky top-0 z-40 bg-[#6B8F71] backdrop-blur-md border-b border-[#55795B] px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4 md:gap-8 transition-colors shadow-sm">
       {/* Zone 1: Single text element wordmark */}
       <div className="flex items-center gap-2.5 shrink-0">
         <span className="text-2xl">📚</span>
