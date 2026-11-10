@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+}
+
+.app-shell:not(.app-dark) {
+  color: #292d29;
+  background-color: #faf7f0;
+}
+
+.app-shell:not(.app-dark) [class~="text-slate-900"],
+.app-shell:not(.app-dark) [class~="text-slate-800"],
+.app-shell:not(.app-dark) [class~="text-slate-700"] {
+  color: #292d29;
+}
+
+.app-shell:not(.app-dark) [class~="text-slate-600"] {
+  color: #4c544d;
+}
+
+.app-shell:not(.app-dark) [class~="bg-indigo-950"],
+.app-shell:not(.app-dark) [class~="bg-indigo-900"],
+.app-shell:not(.app-dark) [class~="bg-indigo-700"],
+.app-shell:not(.app-dark) [class~="bg-indigo-600"],
+.app-shell:not(.app-dark) [class~="bg-indigo-500"] {
+  background-color: #6b8f71;
+  color: #111811;
+}
+
+.app-shell:not(.app-dark) [class~="hover:bg-indigo-900"]:hover {
+  background-color: #55795b;
+}
+
+.app-shell:not(.app-dark) [class~="bg-indigo-50"],
+.app-shell:not(.app-dark) [class~="bg-indigo-50/60"],
+.app-shell:not(.app-dark) [class~="bg-indigo-100"],
+.app-shell:not(.app-dark) [class~="bg-indigo-100/80"],
+.app-shell:not(.app-dark) [class~="bg-indigo-200"] {
+  background-color: #e8eee6;
+}
+
+.app-shell:not(.app-dark) [class~="bg-emerald-50"],
+.app-shell:not(.app-dark) [class~="bg-emerald-50/60"],
+.app-shell:not(.app-dark) [class~="bg-emerald-100"] {
+  background-color: #e8eee6;
+}
+
+.app-shell:not(.app-dark) [class*="text-indigo-"] {
+  color: #4f7055;
+}
+
+.app-shell:not(.app-dark) [class*="text-emerald-"] {
+  color: #4f7055;
+}
+
+.app-shell:not(.app-dark) [class*="border-indigo-"] {
+  border-color: #d3dfd1;
+}
+
+.app-shell:not(.app-dark) [class*="border-emerald-"] {
+  border-color: #d3dfd1;
+}
+
+.app-shell:not(.app-dark) [class*="focus:ring-indigo-"]:focus {
+  --tw-ring-color: #6b8f71;
+}
+
+.app-shell .fixed.inset-0 > .shadow-2xl {
+  box-shadow: 0 16px 40px rgb(38 51 41 / 16%);
+}
+
+.app-shell .shadow-sm {
+  box-shadow: 0 2px 6px rgb(38 51 41 / 8%);
+}
+
+.app-shell .shadow-md {
+  box-shadow: 0 5px 14px rgb(38 51 41 / 10%);
+}
+
+.app-shell.app-dark {
+  color-scheme: dark;
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+.app-dark header {
+  background-color: rgb(15 23 42 / 95%);
+  border-color: #334155;
+}
+
+.app-dark .app-theme-toggle,
+.app-dark .bg-white,
+.app-dark [class~="bg-white/90"],
+.app-dark [class~="bg-white/80"],
+.app-dark [class~="bg-white/70"],
+.app-dark [class~="bg-white/60"] {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.app-dark .bg-slate-50,
+.app-dark [class~="bg-[#FAF7F0]"] {
+  background-color: #0f172a;
+}
+
+.app-dark .bg-slate-100,
+.app-dark .bg-slate-200 {
+  background-color: #334155;
+}
+
+.app-dark [class~="bg-indigo-50"],
+.app-dark [class~="bg-indigo-50/60"],
+.app-dark [class~="bg-rose-50"],
+.app-dark [class~="bg-rose-50/60"],
+.app-dark [class~="bg-emerald-50/60"],
+.app-dark [class~="bg-amber-50"] {
+  background-color: #273449;
+}
+
+.app-dark .border-slate-100,
+.app-dark .border-slate-200,
+.app-dark .border-slate-200\/80,
+.app-dark .border-indigo-100,
+.app-dark .border-indigo-100\/60,
+.app-dark .border-rose-100\/60,
+.app-dark .border-emerald-100\/60 {
+  border-color: #334155;
+}
+
+.app-dark .text-slate-900,
+.app-dark .text-slate-800,
+.app-dark .text-slate-700,
+.app-dark .text-indigo-950,
+.app-dark .text-rose-950,
+.app-dark .text-emerald-950 {
+  color: #e2e8f0;
+}
+
+.app-dark .text-slate-600,
+.app-dark .text-slate-500 {
+  color: #94a3b8;
+}
+
+.app-dark .text-\[\#202820\],
+.app-dark .text-\[\#111811\],
+.app-dark .text-\[\#292D29\] {
+  color: #e2e8f0;
+}
+
+.app-dark input,
+.app-dark textarea,
+.app-dark select {
+  color-scheme: dark;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
+}
