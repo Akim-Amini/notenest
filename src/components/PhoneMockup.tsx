@@ -28,6 +28,7 @@ interface PhoneMockupProps {
   onToggleChecklistItem: (noteId: string, itemId: string) => void;
   onDuplicateNote: (note: NoteItem) => void;
   onExportNote: (note: NoteItem) => void;
+  onAddToCalendar: (note: NoteItem) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   activeFilter: 'all' | 'note' | 'list' | 'pinned' | 'upcoming';
@@ -45,6 +46,7 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
   onToggleChecklistItem,
   onDuplicateNote,
   onExportNote,
+  onAddToCalendar,
   searchQuery,
   setSearchQuery,
   activeFilter,
@@ -335,6 +337,7 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
                             onToggleChecklistItem={onToggleChecklistItem}
                             onDuplicate={onDuplicateNote}
                             onExportSingle={onExportNote}
+                            onAddToCalendar={onAddToCalendar}
                             compact={true}
                             showMarkDone={true}
                           />
@@ -356,6 +359,7 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
                     onToggleChecklistItem={onToggleChecklistItem}
                     onDuplicate={onDuplicateNote}
                     onExportSingle={onExportNote}
+                    onAddToCalendar={onAddToCalendar}
                     compact={true}
                   />
                 ))}

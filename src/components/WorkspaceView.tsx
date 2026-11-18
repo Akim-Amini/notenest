@@ -30,6 +30,7 @@ interface WorkspaceViewProps {
   onToggleChecklistItem: (noteId: string, itemId: string) => void;
   onDuplicateNote: (note: NoteItem) => void;
   onExportNote: (note: NoteItem) => void;
+  onAddToCalendar: (note: NoteItem) => void;
   onExportAll: () => void;
   onImportBackup: (event: React.ChangeEvent<HTMLInputElement>) => void;
   searchQuery: string;
@@ -55,6 +56,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
   onToggleChecklistItem,
   onDuplicateNote,
   onExportNote,
+  onAddToCalendar,
   onExportAll,
   onImportBackup,
   searchQuery,
@@ -526,6 +528,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                             onToggleChecklistItem={onToggleChecklistItem}
                             onDuplicate={onDuplicateNote}
                             onExportSingle={onExportNote}
+                            onAddToCalendar={onAddToCalendar}
                             showMarkDone={true}
                           />
                         ))}
@@ -557,6 +560,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                             onToggleChecklistItem={onToggleChecklistItem}
                             onDuplicate={onDuplicateNote}
                             onExportSingle={onExportNote}
+                            onAddToCalendar={onAddToCalendar}
                           />
                         ))}
                       </div>
@@ -584,6 +588,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                           onToggleChecklistItem={onToggleChecklistItem}
                           onDuplicate={onDuplicateNote}
                           onExportSingle={onExportNote}
+                          onAddToCalendar={onAddToCalendar}
                         />
                       ))}
                     </div>

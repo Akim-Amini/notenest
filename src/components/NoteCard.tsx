@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   Calendar,
+  CalendarPlus,
   Check,
   CheckCircle2,
   Circle,
@@ -24,6 +25,7 @@ interface NoteCardProps {
   onToggleChecklistItem?: (noteId: string, itemId: string) => void;
   onDuplicate?: (note: NoteItem) => void;
   onExportSingle?: (note: NoteItem) => void;
+  onAddToCalendar?: (note: NoteItem) => void;
   compact?: boolean;
   showMarkDone?: boolean;
 }
@@ -52,6 +54,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   onToggleChecklistItem,
   onDuplicate,
   onExportSingle,
+  onAddToCalendar,
   compact = false,
   showMarkDone = false,
 }) => {
@@ -242,21 +245,38 @@ export const NoteCard: React.FC<NoteCardProps> = ({
             )}
             <span className="truncate">{dueBadgeText}</span>
           </span>
-          {showMarkDone && !isDone && onMarkDone && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onMarkDone(note.id);
-              }}
-              title="Mark as done"
-              aria-label={`Mark ${note.title || 'note'} as done`}
-              className="note-card-action ml-auto shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-emerald-600 px-2 py-1 text-[10px] md:text-xs font-bold text-white shadow-xs transition-transform active:scale-95 hover:bg-emerald-700"
-            >
-              <Check className="w-3.5 h-3.5" />
-              {!compact && <span>Mark done</span>}
-            </button>
-          )}
+          <div className="ml-auto flex items-center gap-1 shrink-0">
+            {onAddToCalendar && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddToCalendar(note);
+                }}
+                title="Add to calendar"
+                aria-label={`Add ${note.title || 'item'} to calendar`}
+                className="note-card-action inline-flex items-center justify-center gap-1 rounded-full bg-white/80 hover:bg-white text-indigo-600 px-2 py-1 text-[10px] md:text-xs font-bold shadow-xs transition-transform active:scale-95"
+              >
+                <CalendarPlus className="w-3.5 h-3.5" />
+                {!compact && <span>Calendar</span>}
+              </button>
+            )}
+            {showMarkDone && !isDone && onMarkDone && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMarkDone(note.id);
+                }}
+                title="Mark as done"
+                aria-label={`Mark ${note.title || 'note'} as done`}
+                className="note-card-action inline-flex items-center justify-center gap-1 rounded-full bg-emerald-600 px-2 py-1 text-[10px] md:text-xs font-bold text-white shadow-xs transition-transform active:scale-95 hover:bg-emerald-700"
+              >
+                <Check className="w-3.5 h-3.5" />
+                {!compact && <span>Mark done</span>}
+              </button>
+            )}
+          </div>
         </div>
       )}
 

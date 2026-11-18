@@ -22,6 +22,7 @@ import { NoteEditorModal } from './components/NoteEditorModal';
 import { StatsProfileModal } from './components/StatsProfileModal';
 import { Toast, ToastMessage } from './components/Toast';
 import { useReminders } from './hooks/useReminders';
+import { downloadNoteAsIcs } from './utils/calendar';
 
 const THEME_STORAGE_KEY = 'notes-and-lists-theme';
 
@@ -271,6 +272,17 @@ export default function App() {
     addToast('Note exported as markdown');
   };
 
+  // Download a scheduled item as an RFC 5545 calendar file
+  const handleAddToCalendar = (note: NoteItem) => {
+    try {
+      downloadNoteAsIcs(note);
+      addToast('Calendar file downloaded');
+    } catch (error) {
+      console.error('Failed to create calendar file:', error);
+      addToast('Could not create the calendar file');
+    }
+  };
+
   // Export all notes as JSON
   const handleExportAll = () => {
     exportNotesAsJson(notes);
@@ -397,6 +409,7 @@ export default function App() {
             onToggleChecklistItem={handleToggleChecklistItem}
             onDuplicateNote={handleDuplicateNote}
             onExportNote={handleExportSingleNote}
+            onAddToCalendar={handleAddToCalendar}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             activeFilter={activeFilter === 'trash' ? 'all' : activeFilter}
@@ -414,6 +427,7 @@ export default function App() {
             onToggleChecklistItem={handleToggleChecklistItem}
             onDuplicateNote={handleDuplicateNote}
             onExportNote={handleExportSingleNote}
+            onAddToCalendar={handleAddToCalendar}
             onExportAll={handleExportAll}
             onImportBackup={handleImportBackup}
             searchQuery={searchQuery}

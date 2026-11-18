@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
+  CalendarPlus,
   Check,
   CheckCircle2,
   CheckSquare,
@@ -28,6 +29,7 @@ import {
   Priority,
   REMINDER_OPTIONS,
 } from '../types';
+import { downloadNoteAsIcs } from '../utils/calendar';
 
 interface NoteEditorModalProps {
   isOpen: boolean;
@@ -233,6 +235,39 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
     );
   };
 
+  const handleAddToCalendar = () => {
+    const isoDueAt = toIsoString(dueAt);
+    if (isScheduledKind(kind) && !isoDueAt) {
+      setValidationError(
+        kind === 'event'
+          ? 'Please choose the date and time of the event.'
+          : 'Please choose when this assignment is due.'
+      );
+      return;
+    }
+
+    downloadNoteAsIcs({
+      id: initialNote?.id ?? '',
+      type,
+      title: title.trim() || (type === 'list' ? 'Untitled Checklist' : 'Untitled Note'),
+      content,
+      checklist,
+      color,
+      isPinned,
+      isDeleted: false,
+      tags,
+      createdAt: initialNote?.createdAt ?? Date.now(),
+      updatedAt: initialNote?.updatedAt ?? Date.now(),
+      kind,
+      dueAt: isoDueAt,
+      subject: subject.trim(),
+      priority,
+      eventLocation: eventLocation.trim(),
+      completed,
+      reminderOffsets: [...reminderOffsets],
+    });
+  };
+
   const handleSave = () => {
     const isoDueAt = isScheduledKind(kind) ? toIsoString(dueAt) : undefined;
     if (isScheduledKind(kind) && !isoDueAt) {
@@ -322,8 +357,20 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
             </button>
           </div>
 
-          {/* Quick Actions: Pin, Delete, Close */}
+          {/* Quick Actions: Calendar, Pin, Delete, Close */}
           <div className="flex items-center gap-2">
+            {isScheduledKind(kind) && (
+              <button
+                type="button"
+                onClick={handleAddToCalendar}
+                className="w-8 h-8 rounded-full bg-white/80 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 flex items-center justify-center transition-colors"
+                title="Add to calendar"
+                aria-label="Add to calendar"
+              >
+                <CalendarPlus className="w-4 h-4" />
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => setIsPinned(!isPinned)}
