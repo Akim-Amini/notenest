@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'notenest-shell-v3';
-const RUNTIME_CACHE = 'notenest-runtime-v3';
+const SHELL_CACHE = 'notenest-shell-v4';
+const RUNTIME_CACHE = 'notenest-runtime-v4';
 const APP_CACHE_PREFIXES = ['notenest-', 'notes-and-lists-'];
 const APP_SCOPE = self.registration.scope;
 const APP_ROOT = new URL('./', APP_SCOPE).href;
