@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Bell,
   CheckCircle2,
   Clock,
   Download,
@@ -12,6 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { NoteItem } from '../types';
+import { ReminderPermission } from '../utils/reminders';
 
 interface StatsProfileModalProps {
   isOpen: boolean;
@@ -20,6 +22,11 @@ interface StatsProfileModalProps {
   onExportAll: () => void;
   onImportBackup: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onResetSeedData: () => void;
+  reminderPermission: ReminderPermission;
+  notificationSupported: boolean;
+  reminderTestStatus: string | null;
+  onEnableReminders: () => void;
+  onSendTestNotification: () => void;
 }
 
 export const StatsProfileModal: React.FC<StatsProfileModalProps> = ({
@@ -29,6 +36,11 @@ export const StatsProfileModal: React.FC<StatsProfileModalProps> = ({
   onExportAll,
   onImportBackup,
   onResetSeedData,
+  reminderPermission,
+  notificationSupported,
+  reminderTestStatus,
+  onEnableReminders,
+  onSendTestNotification,
 }) => {
   if (!isOpen) return null;
 
@@ -42,6 +54,26 @@ export const StatsProfileModal: React.FC<StatsProfileModalProps> = ({
     (acc, c) => acc + (c.checklist?.filter((i) => i.completed).length || 0),
     0
   );
+
+  const reminderStatus: Record<ReminderPermission, { label: string; help: string }> = {
+    enabled: {
+      label: 'Enabled',
+      help: 'Browser notifications are on. Due items will also appear in the banner and Upcoming view.',
+    },
+    blocked: {
+      label: 'Blocked',
+      help: 'Open your browser’s site settings for NoteNest and allow Notifications, then reload the page. In-app reminders still work.',
+    },
+    unsupported: {
+      label: 'Not supported',
+      help: 'This browser cannot show system notifications. You will still see reminders in the banner and Upcoming view.',
+    },
+    'not-enabled': {
+      label: 'Off',
+      help: 'Turn on reminders to get browser notifications. Nothing is requested until you tap the button.',
+    },
+  };
+  const status = reminderStatus[reminderPermission];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
@@ -106,6 +138,55 @@ export const StatsProfileModal: React.FC<StatsProfileModalProps> = ({
               <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-xs">
                 {totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0}%
               </div>
+            </div>
+          </div>
+
+          {/* Reminders */}
+          <div className="space-y-2 pt-1 border-t border-slate-100">
+            <div className="flex items-center justify-between gap-2">
+              <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                <Bell className="w-3 h-3" />
+                Reminders
+              </h4>
+              <span
+                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                  reminderPermission === 'enabled'
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : reminderPermission === 'blocked'
+                      ? 'bg-rose-50 text-rose-700'
+                      : 'bg-slate-100 text-slate-600'
+                }`}
+              >
+                {status.label}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 leading-relaxed">{status.help}</p>
+            <div className="flex flex-col gap-2">
+              {reminderPermission !== 'enabled' && (
+                <button
+                  type="button"
+                  onClick={onEnableReminders}
+                  disabled={reminderPermission === 'unsupported'}
+                  className="w-full py-2.5 px-3.5 rounded-xl bg-indigo-950 text-white text-xs font-semibold flex items-center justify-center gap-2 hover:bg-indigo-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Bell className="w-4 h-4" />
+                  Enable reminders
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={onSendTestNotification}
+                disabled={!notificationSupported}
+                className="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-800 flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Bell className="w-4 h-4 text-indigo-600" />
+                Send test notification
+              </button>
+              {reminderTestStatus && (
+                <p className="text-[11px] text-slate-600 bg-slate-50 rounded-lg px-2.5 py-1.5" role="status">
+                  {reminderTestStatus}
+                </p>
+              )}
             </div>
           </div>
 

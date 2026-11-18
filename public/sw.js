@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'notenest-shell-v2';
-const RUNTIME_CACHE = 'notenest-runtime-v2';
+const SHELL_CACHE = 'notenest-shell-v3';
+const RUNTIME_CACHE = 'notenest-runtime-v3';
 const APP_CACHE_PREFIXES = ['notenest-', 'notes-and-lists-'];
 const APP_SCOPE = self.registration.scope;
 const APP_ROOT = new URL('./', APP_SCOPE).href;
@@ -90,4 +90,52 @@ self.addEventListener('fetch', (event) => {
       return response;
     })()
   );
+});
+
+async function focusAppWindow() {
+  const windowClients = await self.clients.matchAll({
+    type: 'window',
+    includeUncontrolled: true,
+  });
+  const existing = windowClients.find((client) => client.url.startsWith(APP_ROOT));
+  if (existing) {
+    if ('focus' in existing) await existing.focus();
+    return existing;
+  }
+  return self.clients.openWindow(APP_ROOT);
+}
+
+async function postToApp(message) {
+  const windowClients = await self.clients.matchAll({
+    type: 'window',
+    includeUncontrolled: true,
+  });
+  const existing =
+    windowClients.find((client) => client.url.startsWith(APP_ROOT)) || windowClients[0];
+
+  if (existing) {
+    existing.postMessage(message);
+    if ('focus' in existing) await existing.focus();
+    return;
+  }
+
+  const opened = await self.clients.openWindow(APP_ROOT);
+  if (opened) opened.postMessage(message);
+}
+
+self.addEventListener('notificationclick', (event) => {
+  const data = event.notification.data || {};
+  const noteId = data.noteId;
+  event.notification.close();
+
+  if (event.action === 'mark-done' && noteId) {
+    event.waitUntil(postToApp({ type: 'REMINDER_MARK_DONE', noteId }));
+    return;
+  }
+  if (event.action === 'snooze-1h' && noteId) {
+    event.waitUntil(postToApp({ type: 'REMINDER_SNOOZE', noteId }));
+    return;
+  }
+
+  event.waitUntil(focusAppWindow());
 });

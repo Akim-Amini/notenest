@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Bell, X } from 'lucide-react';
 import {
   DEFAULT_NOTE_KIND,
   DEFAULT_PRIORITY,
@@ -20,11 +21,13 @@ import { WorkspaceView } from './components/WorkspaceView';
 import { NoteEditorModal } from './components/NoteEditorModal';
 import { StatsProfileModal } from './components/StatsProfileModal';
 import { Toast, ToastMessage } from './components/Toast';
+import { useReminders } from './hooks/useReminders';
 
 const THEME_STORAGE_KEY = 'notes-and-lists-theme';
 
 export default function App() {
   const [notes, setNotes] = useState<NoteItem[]>([]);
+  const [notesReady, setNotesReady] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(
     () => window.matchMedia('(max-width: 767px)').matches
   );
@@ -79,6 +82,7 @@ export default function App() {
   useEffect(() => {
     const loaded = loadNotes();
     setNotes(loaded);
+    setNotesReady(true);
   }, []);
 
   useEffect(() => {
@@ -304,8 +308,31 @@ export default function App() {
     addToast('Reset to original sample cards');
   };
 
+  const {
+    banner: reminderBanner,
+    bannerDismissed: reminderBannerDismissed,
+    dismissBanner: dismissReminderBanner,
+    permission: reminderPermission,
+    notificationSupported,
+    testStatus: reminderTestStatus,
+    refreshPermission: refreshReminderPermission,
+    enableReminders,
+    sendTestNotification,
+  } = useReminders({
+    notes,
+    notesReady,
+    onMarkDone: handleMarkDone,
+    onSnoozed: () => addToast('Reminder snoozed for 1 hour'),
+  });
+
   const activeNotesCount = notes.filter((n) => !n.isDeleted).length;
   const deletedNotesCount = notes.filter((n) => n.isDeleted).length;
+
+  // Refresh from the browser whenever the Reminders UI is opened so the
+  // displayed permission can never be stale.
+  useEffect(() => {
+    if (isProfileOpen) refreshReminderPermission();
+  }, [isProfileOpen, refreshReminderPermission]);
 
   return (
     <div
@@ -313,6 +340,38 @@ export default function App() {
         isDarkMode ? 'app-dark' : ''
       }`}
     >
+      {/* Reminder banner */}
+      {reminderBanner && !reminderBannerDismissed && (
+        <div className="app-reminder-banner shrink-0 flex items-center gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-amber-950">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveFilter('upcoming');
+              dismissReminderBanner();
+            }}
+            className="flex min-w-0 flex-1 items-center gap-2 text-left"
+          >
+            <Bell className="w-4 h-4 shrink-0 text-amber-700" />
+            <span className="min-w-0">
+              <span className="block truncate text-xs font-bold">{reminderBanner.title}</span>
+              {reminderBanner.details.length > 0 && (
+                <span className="block truncate text-[11px] text-amber-800">
+                  {reminderBanner.details.join(' · ')}
+                </span>
+              )}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={dismissReminderBanner}
+            aria-label="Dismiss reminder banner"
+            className="w-8 h-8 shrink-0 rounded-lg hover:bg-amber-100 flex items-center justify-center text-amber-800"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Top Navigation Header */}
       <div className="app-desktop-header">
         <Header
@@ -392,6 +451,11 @@ export default function App() {
         onExportAll={handleExportAll}
         onImportBackup={handleImportBackup}
         onResetSeedData={handleResetSeedData}
+        reminderPermission={reminderPermission}
+        notificationSupported={notificationSupported}
+        reminderTestStatus={reminderTestStatus}
+        onEnableReminders={enableReminders}
+        onSendTestNotification={sendTestNotification}
       />
 
       {/* Toast notifications */}
