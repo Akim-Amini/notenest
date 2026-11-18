@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Check,
+  CheckCircle2,
   CheckSquare,
   FileText,
   Pin,
@@ -12,7 +13,21 @@ import {
   Clock,
   Sparkles,
 } from 'lucide-react';
-import { ChecklistItem, COLOR_CONFIGS, NoteItem, PastelColor, NoteType } from '../types';
+import {
+  ChecklistItem,
+  COLOR_CONFIGS,
+  DEFAULT_NOTE_KIND,
+  DEFAULT_PRIORITY,
+  DEFAULT_REMINDER_OFFSETS,
+  isScheduledKind,
+  NoteItem,
+  NoteKind,
+  NoteType,
+  PastelColor,
+  PRIORITIES,
+  Priority,
+  REMINDER_OPTIONS,
+} from '../types';
 
 interface NoteEditorModalProps {
   isOpen: boolean;
@@ -20,6 +35,34 @@ interface NoteEditorModalProps {
   onClose: () => void;
   onSave: (noteData: Partial<NoteItem>) => void;
   onDelete?: (id: string) => void;
+}
+
+const KIND_OPTIONS: { value: NoteKind; label: string }[] = [
+  { value: 'general', label: 'General' },
+  { value: 'assignment', label: 'Assignment' },
+  { value: 'event', label: 'Event' },
+];
+
+const PRIORITY_LABELS: Record<Priority, string> = {
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
+};
+
+function toDateTimeLocalValue(iso?: string): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours()
+  )}:${pad(date.getMinutes())}`;
+}
+
+function toIsoString(localValue: string): string | undefined {
+  if (!localValue) return undefined;
+  const date = new Date(localValue);
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
 }
 
 export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
@@ -36,9 +79,19 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
   const [newChecklistText, setNewChecklistText] = useState('');
   const [color, setColor] = useState<PastelColor>('peach');
   const [isPinned, setIsPinned] = useState(false);
+  const [kind, setKind] = useState<NoteKind>(DEFAULT_NOTE_KIND);
+  const [dueAt, setDueAt] = useState('');
+  const [subject, setSubject] = useState('');
+  const [priority, setPriority] = useState<Priority>(DEFAULT_PRIORITY);
+  const [eventLocation, setEventLocation] = useState('');
+  const [completed, setCompleted] = useState(false);
+  const [reminderOffsets, setReminderOffsets] = useState<number[]>([
+    ...DEFAULT_REMINDER_OFFSETS,
+  ]);
   const [tags, setTags] = useState<string[]>([]);
   const [newTagInput, setNewTagInput] = useState('');
   const [hasSaved, setHasSaved] = useState(false);
+  const [validationError, setValidationError] = useState('');
 
   const newChecklistInputRef = useRef<HTMLInputElement>(null);
 
@@ -59,6 +112,17 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
       setChecklist(initialNote.checklist ? [...initialNote.checklist] : []);
       setColor(initialNote.color || 'peach');
       setIsPinned(Boolean(initialNote.isPinned));
+      setKind(initialNote.kind || DEFAULT_NOTE_KIND);
+      setDueAt(toDateTimeLocalValue(initialNote.dueAt));
+      setSubject(initialNote.subject || '');
+      setPriority(initialNote.priority || DEFAULT_PRIORITY);
+      setEventLocation(initialNote.eventLocation || '');
+      setCompleted(Boolean(initialNote.completed));
+      setReminderOffsets(
+        Array.isArray(initialNote.reminderOffsets)
+          ? [...initialNote.reminderOffsets]
+          : [...DEFAULT_REMINDER_OFFSETS]
+      );
       setTags(initialNote.tags ? [...initialNote.tags] : []);
     } else {
       setType('note');
@@ -67,11 +131,19 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
       setChecklist([]);
       setColor('peach');
       setIsPinned(false);
+      setKind(DEFAULT_NOTE_KIND);
+      setDueAt('');
+      setSubject('');
+      setPriority(DEFAULT_PRIORITY);
+      setEventLocation('');
+      setCompleted(false);
+      setReminderOffsets([...DEFAULT_REMINDER_OFFSETS]);
       setTags([]);
     }
     setNewChecklistText('');
     setNewTagInput('');
     setHasSaved(false);
+    setValidationError('');
   }, [initialNote, isOpen]);
 
   if (!isOpen) return null;
@@ -148,7 +220,30 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
     setTags(tags.filter((t) => t !== tagToRemove));
   };
 
+  const handleKindChange = (nextKind: NoteKind) => {
+    setKind(nextKind);
+    setValidationError('');
+  };
+
+  const handleToggleReminder = (minutes: number) => {
+    setReminderOffsets((current) =>
+      current.includes(minutes)
+        ? current.filter((value) => value !== minutes)
+        : [...current, minutes].sort((a, b) => b - a)
+    );
+  };
+
   const handleSave = () => {
+    const isoDueAt = isScheduledKind(kind) ? toIsoString(dueAt) : undefined;
+    if (isScheduledKind(kind) && !isoDueAt) {
+      setValidationError(
+        kind === 'event'
+          ? 'Please choose the date and time of the event.'
+          : 'Please choose when this assignment is due.'
+      );
+      return;
+    }
+
     // If user has pending text in the checklist input, add it before saving
     let finalChecklist = [...checklist];
     if (type === 'list' && newChecklistText.trim()) {
@@ -173,6 +268,13 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
       isPinned,
       tags,
       isDeleted: false,
+      kind,
+      dueAt: isoDueAt,
+      subject: subject.trim(),
+      priority,
+      eventLocation: eventLocation.trim(),
+      completed,
+      reminderOffsets: [...reminderOffsets],
     });
     setHasSaved(true);
     setTimeout(() => {
@@ -182,6 +284,8 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
 
   const currentColor = COLOR_CONFIGS[color] || COLOR_CONFIGS.peach;
   const colorKeys = Object.keys(COLOR_CONFIGS) as PastelColor[];
+  const fieldClass =
+    'w-full min-w-0 min-h-[44px] px-3 py-2 rounded-xl bg-white border border-black/10 text-base text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-800';
 
   return (
     <div className="note-editor-overlay fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
@@ -261,6 +365,30 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
 
         {/* Modal Scrollable Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
+          {/* Kind Selector */}
+          <div>
+            <span className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2">
+              Kind
+            </span>
+            <div className="grid grid-cols-3 gap-1.5 p-1 bg-white/70 rounded-2xl shadow-xs">
+              {KIND_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => handleKindChange(option.value)}
+                  aria-pressed={kind === option.value}
+                  className={`min-h-[44px] px-2 rounded-xl text-xs font-semibold transition-all ${
+                    kind === option.value
+                      ? 'bg-slate-900 text-white shadow-sm'
+                      : 'text-slate-700 hover:bg-white/80'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Note Title Input */}
           <div>
             <input
@@ -273,6 +401,149 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
               autoFocus={!initialNote}
             />
           </div>
+
+          {/* Scheduling fields for assignments and events */}
+          {isScheduledKind(kind) && (
+            <div className="space-y-3 p-3 md:p-4 rounded-2xl bg-white/60 border border-black/5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label
+                    htmlFor="note-due-at"
+                    className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5"
+                  >
+                    Due date &amp; time <span className="text-rose-600">*</span>
+                  </label>
+                  <input
+                    id="note-due-at"
+                    type="datetime-local"
+                    value={dueAt}
+                    onChange={(e) => {
+                      setDueAt(e.target.value);
+                      setValidationError('');
+                    }}
+                    onFocus={handleEditorFieldFocus}
+                    required
+                    aria-required="true"
+                    className={fieldClass}
+                    style={{ colorScheme: 'light' }}
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="note-subject"
+                    className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5"
+                  >
+                    Subject
+                  </label>
+                  <input
+                    id="note-subject"
+                    type="text"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    onFocus={handleEditorFieldFocus}
+                    placeholder="e.g. Biology, Project..."
+                    className={fieldClass}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+                <div>
+                  <span className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+                    Priority
+                  </span>
+                  <div className="flex gap-1.5 p-1 bg-white/70 rounded-xl">
+                    {PRIORITIES.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => setPriority(option)}
+                        aria-pressed={priority === option}
+                        className={`flex-1 min-h-[44px] rounded-lg text-xs font-semibold transition-all ${
+                          priority === option
+                            ? 'bg-slate-900 text-white shadow-sm'
+                            : 'text-slate-700 hover:bg-white/80'
+                        }`}
+                      >
+                        {PRIORITY_LABELS[option]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCompleted((current) => !current)}
+                  aria-pressed={completed}
+                  className={`min-h-[44px] px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all ${
+                    completed
+                      ? 'bg-emerald-600 text-white border-emerald-600'
+                      : 'bg-white/80 text-slate-700 border-black/10 hover:bg-white'
+                  }`}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  {completed ? 'Done' : 'Mark as done'}
+                </button>
+              </div>
+
+              {kind === 'event' && (
+                <div>
+                  <label
+                    htmlFor="note-location"
+                    className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5"
+                  >
+                    Location
+                  </label>
+                  <input
+                    id="note-location"
+                    type="text"
+                    value={eventLocation}
+                    onChange={(e) => setEventLocation(e.target.value)}
+                    onFocus={handleEditorFieldFocus}
+                    placeholder="Where is it happening?"
+                    className={fieldClass}
+                  />
+                </div>
+              )}
+
+              <div>
+                <span className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+                  Reminders
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {REMINDER_OPTIONS.map((option) => {
+                    const checked = reminderOffsets.includes(option.minutes);
+                    return (
+                      <label
+                        key={option.minutes}
+                        className={`inline-flex items-center gap-2 min-h-[44px] px-3 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
+                          checked
+                            ? 'bg-slate-900 text-white border-slate-900'
+                            : 'bg-white/80 text-slate-700 border-black/10 hover:bg-white'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => handleToggleReminder(option.minutes)}
+                          className="w-4 h-4 accent-slate-900"
+                        />
+                        {option.label}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {validationError && (
+                <p
+                  role="alert"
+                  className="text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2"
+                >
+                  {validationError}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Note Mode: Textarea */}
           {type === 'note' && (

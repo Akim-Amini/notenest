@@ -3,6 +3,7 @@ import {
   Calendar,
   CheckCircle2,
   Circle,
+  Clock,
   Copy,
   Download,
   Edit3,
@@ -10,7 +11,7 @@ import {
   Pin,
   Trash2,
 } from 'lucide-react';
-import { COLOR_CONFIGS, NoteItem } from '../types';
+import { COLOR_CONFIGS, isScheduledKind, NoteItem } from '../types';
 import { formatRelativeTime } from '../services/storage';
 
 interface NoteCardProps {
@@ -23,6 +24,21 @@ interface NoteCardProps {
   onExportSingle?: (note: NoteItem) => void;
   compact?: boolean;
 }
+
+const fullDueFormatter = new Intl.DateTimeFormat(undefined, {
+  month: 'short',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+});
+
+const compactDueFormatter = new Intl.DateTimeFormat(undefined, {
+  month: 'short',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+});
 
 export const NoteCard: React.FC<NoteCardProps> = ({
   note,
@@ -39,6 +55,41 @@ export const NoteCard: React.FC<NoteCardProps> = ({
 
   const totalChecklist = note.checklist?.length || 0;
   const completedChecklist = note.checklist?.filter((item) => item.completed).length || 0;
+
+  const dueTimestamp = note.dueAt ? new Date(note.dueAt).getTime() : NaN;
+  const hasDueDate = isScheduledKind(note.kind) && !Number.isNaN(dueTimestamp);
+  const isDone = Boolean(note.completed);
+  const timeUntilDue = hasDueDate ? dueTimestamp - Date.now() : Infinity;
+  const isOverdue = hasDueDate && !isDone && timeUntilDue < 0;
+  const isDueSoon =
+    hasDueDate && !isDone && timeUntilDue >= 0 && timeUntilDue <= 24 * 60 * 60 * 1000;
+
+  const dueText = hasDueDate
+    ? (compact ? compactDueFormatter : fullDueFormatter).format(dueTimestamp)
+    : '';
+  const duePrefix = isDone
+    ? 'Done · '
+    : compact
+      ? ''
+      : note.kind === 'event'
+        ? 'Event · '
+        : 'Due · ';
+  const dueBadgeText = hasDueDate ? `${duePrefix}${dueText}` : '';
+  const dueBadgeClasses = isDone
+    ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+    : isOverdue
+      ? 'bg-rose-100 text-rose-800 border-rose-200'
+      : isDueSoon
+        ? 'bg-amber-100 text-amber-900 border-amber-200'
+        : 'bg-white/80 text-slate-700 border-black/8';
+  const dueBadgeTitle = [
+    isDone ? 'Completed' : note.kind === 'event' ? 'Event' : 'Assignment due',
+    hasDueDate ? fullDueFormatter.format(dueTimestamp) : '',
+    note.subject,
+    note.eventLocation,
+  ]
+    .filter(Boolean)
+    .join('\n');
 
   return (
     <div
@@ -171,6 +222,23 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           )}
         </div>
       </div>
+
+      {/* Due date badge for assignments and events */}
+      {hasDueDate && (
+        <div className="mb-2 flex items-center gap-1.5 overflow-hidden">
+          <span
+            title={dueBadgeTitle}
+            className={`inline-flex max-w-full items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] md:text-xs font-semibold ${dueBadgeClasses}`}
+          >
+            {isDone ? (
+              <CheckCircle2 className="w-3 h-3 shrink-0" />
+            ) : (
+              <Clock className="w-3 h-3 shrink-0" />
+            )}
+            <span className="truncate">{dueBadgeText}</span>
+          </span>
+        </div>
+      )}
 
       {/* Main Body Content */}
       <div

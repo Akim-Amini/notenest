@@ -1,4 +1,13 @@
-import { NoteItem } from '../types';
+import {
+  DEFAULT_NOTE_KIND,
+  DEFAULT_PRIORITY,
+  DEFAULT_REMINDER_OFFSETS,
+  formatReminderOffset,
+  isScheduledKind,
+  NOTE_KINDS,
+  NoteItem,
+  PRIORITIES,
+} from '../types';
 
 const STORAGE_KEY = 'quicknotes_items_v1';
 
@@ -92,6 +101,30 @@ export const INITIAL_NOTES: NoteItem[] = [
   },
 ];
 
+// Adds safe defaults for scheduling fields without rejecting older notes.
+// Non-object entries are left untouched so malformed data handling is unchanged.
+function normalizeNote(note: NoteItem): NoteItem {
+  if (!note || typeof note !== 'object' || Array.isArray(note)) return note;
+
+  return {
+    ...note,
+    kind: note.kind && NOTE_KINDS.includes(note.kind) ? note.kind : DEFAULT_NOTE_KIND,
+    dueAt: typeof note.dueAt === 'string' ? note.dueAt : undefined,
+    eventLocation: typeof note.eventLocation === 'string' ? note.eventLocation : '',
+    subject: typeof note.subject === 'string' ? note.subject : '',
+    priority:
+      note.priority && PRIORITIES.includes(note.priority) ? note.priority : DEFAULT_PRIORITY,
+    completed: typeof note.completed === 'boolean' ? note.completed : false,
+    reminderOffsets: Array.isArray(note.reminderOffsets)
+      ? [...note.reminderOffsets]
+      : [...DEFAULT_REMINDER_OFFSETS],
+  };
+}
+
+export function normalizeNotes(notes: NoteItem[]): NoteItem[] {
+  return notes.map(normalizeNote);
+}
+
 export function loadNotes(): NoteItem[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -101,7 +134,7 @@ export function loadNotes(): NoteItem[] {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
+      return normalizeNotes(parsed);
     }
     return INITIAL_NOTES;
   } catch (err) {
@@ -151,6 +184,27 @@ export function exportSingleNoteAsText(note: NoteItem) {
   if (note.tags.length > 0) {
     text += `Tags: ${note.tags.join(', ')}\n\n`;
   }
+
+  const detailLines: string[] = [];
+  if (note.subject) detailLines.push(`Subject: ${note.subject}`);
+  if (note.priority) detailLines.push(`Priority: ${note.priority}`);
+  if (note.completed) detailLines.push('Status: Done');
+  if (isScheduledKind(note.kind) && note.dueAt) {
+    const due = new Date(note.dueAt);
+    if (!Number.isNaN(due.getTime())) {
+      detailLines.push(`Due: ${due.toLocaleString()}`);
+    }
+    if (note.eventLocation) detailLines.push(`Location: ${note.eventLocation}`);
+    if (note.reminderOffsets && note.reminderOffsets.length > 0) {
+      detailLines.push(
+        `Reminders: ${note.reminderOffsets.map(formatReminderOffset).join(', ')}`
+      );
+    }
+  }
+  if (detailLines.length > 0) {
+    text += `${detailLines.join('\n')}\n\n`;
+  }
+
   if (note.type === 'list') {
     text += 'Checklist:\n';
     note.checklist.forEach((item) => {

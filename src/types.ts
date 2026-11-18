@@ -1,5 +1,38 @@
 export type NoteType = 'note' | 'list';
 
+export type NoteKind = 'general' | 'assignment' | 'event';
+export type Priority = 'low' | 'medium' | 'high';
+
+export const NOTE_KINDS: NoteKind[] = ['general', 'assignment', 'event'];
+export const PRIORITIES: Priority[] = ['low', 'medium', 'high'];
+export const DEFAULT_NOTE_KIND: NoteKind = 'general';
+export const DEFAULT_PRIORITY: Priority = 'medium';
+export const DEFAULT_REMINDER_OFFSETS: readonly number[] = [1440, 360, 60];
+
+export const REMINDER_OPTIONS = [
+  { minutes: 1440, label: '1 day before' },
+  { minutes: 360, label: '6 hours before' },
+  { minutes: 60, label: '1 hour before' },
+] as const;
+
+export function isScheduledKind(kind?: NoteKind): boolean {
+  return kind === 'assignment' || kind === 'event';
+}
+
+export function formatReminderOffset(minutes: number): string {
+  const option = REMINDER_OPTIONS.find((item) => item.minutes === minutes);
+  if (option) return option.label;
+  if (minutes >= 1440 && minutes % 1440 === 0) {
+    const days = minutes / 1440;
+    return `${days} day${days === 1 ? '' : 's'} before`;
+  }
+  if (minutes >= 60 && minutes % 60 === 0) {
+    const hours = minutes / 60;
+    return `${hours} hour${hours === 1 ? '' : 's'} before`;
+  }
+  return `${minutes} minutes before`;
+}
+
 export interface ChecklistItem {
   id: string;
   text: string;
@@ -28,6 +61,15 @@ export interface NoteItem {
   tags: string[];
   createdAt: number;
   updatedAt: number;
+
+  // Optional scheduling fields. Old notes are migrated with safe defaults.
+  kind?: NoteKind;
+  dueAt?: string; // ISO date-time string
+  eventLocation?: string;
+  subject?: string;
+  priority?: Priority;
+  completed?: boolean;
+  reminderOffsets?: number[]; // minutes before dueAt
 }
 
 export interface ColorConfig {

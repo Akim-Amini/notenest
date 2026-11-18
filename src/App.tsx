@@ -1,10 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { NoteItem, PastelColor } from './types';
+import {
+  DEFAULT_NOTE_KIND,
+  DEFAULT_PRIORITY,
+  DEFAULT_REMINDER_OFFSETS,
+  NoteItem,
+  PastelColor,
+} from './types';
 import {
   exportNotesAsJson,
   exportSingleNoteAsText,
   INITIAL_NOTES,
   loadNotes,
+  normalizeNotes,
   saveNotesToStorage,
 } from './services/storage';
 import { Header } from './components/Header';
@@ -105,6 +112,11 @@ export default function App() {
             tags: [],
             createdAt: Date.now(),
             updatedAt: Date.now(),
+            kind: DEFAULT_NOTE_KIND,
+            subject: '',
+            priority: DEFAULT_PRIORITY,
+            completed: false,
+            reminderOffsets: [...DEFAULT_REMINDER_OFFSETS],
           }
         : null
     );
@@ -139,19 +151,23 @@ export default function App() {
       );
     } else {
       // Create new note
-      const newNote: NoteItem = {
-        id: `note-${now}-${Math.random().toString(36).substr(2, 5)}`,
-        type: noteData.type || 'note',
-        title: noteData.title || (noteData.type === 'list' ? 'Untitled Checklist' : 'Untitled Note'),
-        content: noteData.content || '',
-        checklist: noteData.checklist || [],
-        color: noteData.color || 'peach',
-        isPinned: Boolean(noteData.isPinned),
-        isDeleted: false,
-        tags: noteData.tags || [],
-        createdAt: now,
-        updatedAt: now,
-      };
+      const newNote = normalizeNotes([
+        {
+          ...noteData,
+          id: `note-${now}-${Math.random().toString(36).substr(2, 5)}`,
+          type: noteData.type || 'note',
+          title:
+            noteData.title || (noteData.type === 'list' ? 'Untitled Checklist' : 'Untitled Note'),
+          content: noteData.content || '',
+          checklist: noteData.checklist || [],
+          color: noteData.color || 'peach',
+          isPinned: Boolean(noteData.isPinned),
+          isDeleted: false,
+          tags: noteData.tags || [],
+          createdAt: now,
+          updatedAt: now,
+        },
+      ])[0];
       updateNotesAndPersist([newNote, ...notes]);
       addToast(
         newNote.type === 'list'
@@ -244,8 +260,9 @@ export default function App() {
       try {
         const parsed = JSON.parse(event.target?.result as string);
         if (Array.isArray(parsed)) {
-          updateNotesAndPersist(parsed);
-          addToast(`Restored ${parsed.length} notes from backup`);
+          const restored = normalizeNotes(parsed);
+          updateNotesAndPersist(restored);
+          addToast(`Restored ${restored.length} notes from backup`);
         } else {
           alert('Invalid backup file format');
         }
