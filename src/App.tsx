@@ -38,7 +38,9 @@ export default function App() {
   });
   const [viewMode, setViewMode] = useState<'mockup' | 'workspace'>('mockup');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'all' | 'note' | 'list' | 'pinned' | 'trash'>('all');
+  const [activeFilter, setActiveFilter] = useState<
+    'all' | 'note' | 'list' | 'pinned' | 'upcoming' | 'trash'
+  >('all');
   const [selectedColor, setSelectedColor] = useState<PastelColor | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'updated' | 'created' | 'title'>('updated');
@@ -198,6 +200,27 @@ export default function App() {
     });
   };
 
+  // Mark a scheduled note as done with Undo support
+  const handleMarkDone = (id: string) => {
+    const target = notes.find((n) => n.id === id);
+    if (!target) return;
+
+    const updated = notes.map((n) =>
+      n.id === id ? { ...n, completed: true, updatedAt: Date.now() } : n
+    );
+    updateNotesAndPersist(updated);
+
+    addToast('Marked as done', 'Undo', () => {
+      setNotes((current) => {
+        const restored = current.map((n) =>
+          n.id === id ? { ...n, completed: false } : n
+        );
+        saveNotesToStorage(restored);
+        return restored;
+      });
+    });
+  };
+
   // Toggle pin
   const handleTogglePin = (id: string) => {
     const target = notes.find((n) => n.id === id);
@@ -310,6 +333,7 @@ export default function App() {
             onOpenCreate={handleOpenCreate}
             onEditNote={handleEditNote}
             onDeleteNote={handleDeleteNote}
+            onMarkDone={handleMarkDone}
             onTogglePin={handleTogglePin}
             onToggleChecklistItem={handleToggleChecklistItem}
             onDuplicateNote={handleDuplicateNote}
@@ -326,6 +350,7 @@ export default function App() {
             onOpenCreate={handleOpenCreate}
             onEditNote={handleEditNote}
             onDeleteNote={handleDeleteNote}
+            onMarkDone={handleMarkDone}
             onTogglePin={handleTogglePin}
             onToggleChecklistItem={handleToggleChecklistItem}
             onDuplicateNote={handleDuplicateNote}

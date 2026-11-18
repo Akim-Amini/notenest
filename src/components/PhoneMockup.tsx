@@ -15,6 +15,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { NoteItem } from '../types';
+import { groupUpcomingNotes, isUpcomingNote } from '../utils/upcoming';
 import { NoteCard } from './NoteCard';
 
 interface PhoneMockupProps {
@@ -22,14 +23,15 @@ interface PhoneMockupProps {
   onOpenCreate: (type?: 'note' | 'list') => void;
   onEditNote: (note: NoteItem) => void;
   onDeleteNote: (id: string) => void;
+  onMarkDone: (id: string) => void;
   onTogglePin: (id: string) => void;
   onToggleChecklistItem: (noteId: string, itemId: string) => void;
   onDuplicateNote: (note: NoteItem) => void;
   onExportNote: (note: NoteItem) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  activeFilter: 'all' | 'note' | 'list' | 'pinned';
-  setActiveFilter: (filter: 'all' | 'note' | 'list' | 'pinned') => void;
+  activeFilter: 'all' | 'note' | 'list' | 'pinned' | 'upcoming';
+  setActiveFilter: (filter: 'all' | 'note' | 'list' | 'pinned' | 'upcoming') => void;
   onOpenProfile: () => void;
 }
 
@@ -38,6 +40,7 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
   onOpenCreate,
   onEditNote,
   onDeleteNote,
+  onMarkDone,
   onTogglePin,
   onToggleChecklistItem,
   onDuplicateNote,
@@ -53,6 +56,7 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
   // Filter notes for the phone screen
   const filteredNotes = notes.filter((n) => {
     if (n.isDeleted) return false;
+    if (activeFilter === 'upcoming' && !isUpcomingNote(n)) return false;
     if (activeFilter === 'pinned' && !n.isPinned) return false;
     if (activeFilter === 'note' && n.type !== 'note') return false;
     if (activeFilter === 'list' && n.type !== 'list') return false;
@@ -69,6 +73,8 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
     }
     return true;
   });
+
+  const upcomingGroups = activeFilter === 'upcoming' ? groupUpcomingNotes(filteredNotes) : [];
 
   return (
     <div className="phone-preview-shell flex flex-col items-center justify-center py-6 px-3 w-full max-w-xl mx-auto">
@@ -267,6 +273,7 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
             {(
               [
                 { id: 'all', label: 'All' },
+                { id: 'upcoming', label: '📅 Upcoming' },
                 { id: 'pinned', label: '📌 Pinned' },
                 { id: 'note', label: '📝 Notes' },
                 { id: 'list', label: '☑️ Lists' },
@@ -298,8 +305,44 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
                 <p className="text-[11px] text-slate-400 mt-1 max-w-[200px]">
                   {searchQuery
                     ? `No notes match "${searchQuery}"`
-                    : 'Tap the (+) button below to create your first note or list!'}
+                    : activeFilter === 'upcoming'
+                      ? 'No upcoming assignments or events. Add a due date to see them here!'
+                      : 'Tap the (+) button below to create your first note or list!'}
                 </p>
+              </div>
+            ) : activeFilter === 'upcoming' ? (
+              <div className="space-y-5">
+                {upcomingGroups.map((group) => (
+                  <section key={group.id} className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                        {group.label}
+                      </h3>
+                      <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-700">
+                        {group.notes.length}
+                      </span>
+                    </div>
+                    {group.notes.length > 0 && (
+                      <div className="phone-note-grid grid grid-cols-2 gap-2.5 items-start">
+                        {group.notes.map((note) => (
+                          <NoteCard
+                            key={note.id}
+                            note={note}
+                            onEdit={onEditNote}
+                            onDelete={onDeleteNote}
+                            onMarkDone={onMarkDone}
+                            onTogglePin={onTogglePin}
+                            onToggleChecklistItem={onToggleChecklistItem}
+                            onDuplicate={onDuplicateNote}
+                            onExportSingle={onExportNote}
+                            compact={true}
+                            showMarkDone={true}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                ))}
               </div>
             ) : (
               <div className="phone-note-grid grid grid-cols-2 gap-2.5 items-start">

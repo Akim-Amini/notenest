@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   Calendar,
+  Check,
   CheckCircle2,
   Circle,
   Clock,
@@ -18,11 +19,13 @@ interface NoteCardProps {
   note: NoteItem;
   onEdit: (note: NoteItem) => void;
   onDelete: (id: string) => void;
+  onMarkDone?: (id: string) => void;
   onTogglePin: (id: string) => void;
   onToggleChecklistItem?: (noteId: string, itemId: string) => void;
   onDuplicate?: (note: NoteItem) => void;
   onExportSingle?: (note: NoteItem) => void;
   compact?: boolean;
+  showMarkDone?: boolean;
 }
 
 const fullDueFormatter = new Intl.DateTimeFormat(undefined, {
@@ -44,11 +47,13 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   note,
   onEdit,
   onDelete,
+  onMarkDone,
   onTogglePin,
   onToggleChecklistItem,
   onDuplicate,
   onExportSingle,
   compact = false,
+  showMarkDone = false,
 }) => {
   const [showMenu, setShowMenu] = React.useState(false);
   const colorConf = COLOR_CONFIGS[note.color] || COLOR_CONFIGS.peach;
@@ -228,7 +233,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         <div className="mb-2 flex items-center gap-1.5 overflow-hidden">
           <span
             title={dueBadgeTitle}
-            className={`inline-flex max-w-full items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] md:text-xs font-semibold ${dueBadgeClasses}`}
+            className={`inline-flex min-w-0 max-w-full items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] md:text-xs font-semibold ${dueBadgeClasses}`}
           >
             {isDone ? (
               <CheckCircle2 className="w-3 h-3 shrink-0" />
@@ -237,6 +242,21 @@ export const NoteCard: React.FC<NoteCardProps> = ({
             )}
             <span className="truncate">{dueBadgeText}</span>
           </span>
+          {showMarkDone && !isDone && onMarkDone && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMarkDone(note.id);
+              }}
+              title="Mark as done"
+              aria-label={`Mark ${note.title || 'note'} as done`}
+              className="note-card-action ml-auto shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-emerald-600 px-2 py-1 text-[10px] md:text-xs font-bold text-white shadow-xs transition-transform active:scale-95 hover:bg-emerald-700"
+            >
+              <Check className="w-3.5 h-3.5" />
+              {!compact && <span>Mark done</span>}
+            </button>
+          )}
         </div>
       )}
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   Archive,
+  CalendarClock,
   CheckSquare,
   FileText,
   Filter,
@@ -16,6 +17,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { COLOR_CONFIGS, NoteItem, PastelColor } from '../types';
+import { getDueTimestamp, groupUpcomingNotes, isUpcomingNote } from '../utils/upcoming';
 import { NoteCard } from './NoteCard';
 
 interface WorkspaceViewProps {
@@ -23,6 +25,7 @@ interface WorkspaceViewProps {
   onOpenCreate: (type?: 'note' | 'list') => void;
   onEditNote: (note: NoteItem) => void;
   onDeleteNote: (id: string) => void;
+  onMarkDone: (id: string) => void;
   onTogglePin: (id: string) => void;
   onToggleChecklistItem: (noteId: string, itemId: string) => void;
   onDuplicateNote: (note: NoteItem) => void;
@@ -31,8 +34,8 @@ interface WorkspaceViewProps {
   onImportBackup: (event: React.ChangeEvent<HTMLInputElement>) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  activeFilter: 'all' | 'note' | 'list' | 'pinned' | 'trash';
-  setActiveFilter: (filter: 'all' | 'note' | 'list' | 'pinned' | 'trash') => void;
+  activeFilter: 'all' | 'note' | 'list' | 'pinned' | 'upcoming' | 'trash';
+  setActiveFilter: (filter: 'all' | 'note' | 'list' | 'pinned' | 'upcoming' | 'trash') => void;
   selectedColor: PastelColor | null;
   setSelectedColor: (color: PastelColor | null) => void;
   selectedTag: string | null;
@@ -47,6 +50,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
   onOpenCreate,
   onEditNote,
   onDeleteNote,
+  onMarkDone,
   onTogglePin,
   onToggleChecklistItem,
   onDuplicateNote,
@@ -82,6 +86,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
       }
       if (n.isDeleted) return false;
 
+      if (activeFilter === 'upcoming' && !isUpcomingNote(n)) return false;
       if (activeFilter === 'pinned' && !n.isPinned) return false;
       if (activeFilter === 'note' && n.type !== 'note') return false;
       if (activeFilter === 'list' && n.type !== 'list') return false;
@@ -102,6 +107,9 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
       return true;
     })
     .sort((a, b) => {
+      if (activeFilter === 'upcoming') {
+        return (getDueTimestamp(a) ?? Infinity) - (getDueTimestamp(b) ?? Infinity);
+      }
       // Pinned notes always on top if in 'all' view
       if (activeFilter === 'all' && a.isPinned !== b.isPinned) {
         return a.isPinned ? -1 : 1;
@@ -122,6 +130,8 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
   const pinnedCount = notes.filter((n) => !n.isDeleted && n.isPinned).length;
   const noteTypeCount = notes.filter((n) => !n.isDeleted && n.type === 'note').length;
   const listTypeCount = notes.filter((n) => !n.isDeleted && n.type === 'list').length;
+  const upcomingCount = notes.filter(isUpcomingNote).length;
+  const upcomingGroups = activeFilter === 'upcoming' ? groupUpcomingNotes(filteredNotes) : [];
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -191,6 +201,26 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
                 <span>Pinned Notes</span>
               </div>
               <span className="text-slate-400 font-normal">{pinnedCount}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setActiveFilter('upcoming');
+                setSelectedColor(null);
+                setSelectedTag(null);
+              }}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                activeFilter === 'upcoming'
+                  ? 'bg-amber-50 text-amber-950'
+                  : 'text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <CalendarClock className="w-4 h-4 text-amber-600" />
+                <span>Upcoming</span>
+              </div>
+              <span className="text-slate-400 font-normal">{upcomingCount}</span>
             </button>
 
             <button
@@ -472,57 +502,94 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Pinned Notes Section (if activeFilter is 'all' and there are pinned notes) */}
-              {activeFilter === 'all' && pinnedNotes.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Pin className="w-4 h-4 text-rose-500 fill-rose-500 rotate-45" />
-                    <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                      Pinned ({pinnedNotes.length})
-                    </h3>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {pinnedNotes.map((note) => (
-                      <NoteCard
-                        key={note.id}
-                        note={note}
-                        onEdit={onEditNote}
-                        onDelete={onDeleteNote}
-                        onTogglePin={onTogglePin}
-                        onToggleChecklistItem={onToggleChecklistItem}
-                        onDuplicate={onDuplicateNote}
-                        onExportSingle={onExportNote}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+              {activeFilter === 'upcoming' ? (
+                upcomingGroups.map((group) => (
+                  <section key={group.id} className="space-y-3">
+                    <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
+                      <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                        {group.label}
+                      </h3>
+                      <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-700">
+                        {group.notes.length}
+                      </span>
+                    </div>
+                    {group.notes.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {group.notes.map((note) => (
+                          <NoteCard
+                            key={note.id}
+                            note={note}
+                            onEdit={onEditNote}
+                            onDelete={onDeleteNote}
+                            onMarkDone={onMarkDone}
+                            onTogglePin={onTogglePin}
+                            onToggleChecklistItem={onToggleChecklistItem}
+                            onDuplicate={onDuplicateNote}
+                            onExportSingle={onExportNote}
+                            showMarkDone={true}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400">Nothing here</p>
+                    )}
+                  </section>
+                ))
+              ) : (
+                <>
+                  {/* Pinned Notes Section (if activeFilter is 'all' and there are pinned notes) */}
+                  {activeFilter === 'all' && pinnedNotes.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Pin className="w-4 h-4 text-rose-500 fill-rose-500 rotate-45" />
+                        <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                          Pinned ({pinnedNotes.length})
+                        </h3>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {pinnedNotes.map((note) => (
+                          <NoteCard
+                            key={note.id}
+                            note={note}
+                            onEdit={onEditNote}
+                            onDelete={onDeleteNote}
+                            onTogglePin={onTogglePin}
+                            onToggleChecklistItem={onToggleChecklistItem}
+                            onDuplicate={onDuplicateNote}
+                            onExportSingle={onExportNote}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-              {/* Other Notes Section */}
-              <div className="space-y-3">
-                {activeFilter === 'all' && pinnedNotes.length > 0 && (
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    Other Notes ({otherNotes.length})
-                  </h3>
-                )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {(activeFilter === 'all' && pinnedNotes.length > 0
-                    ? otherNotes
-                    : filteredNotes
-                  ).map((note) => (
-                    <NoteCard
-                      key={note.id}
-                      note={note}
-                      onEdit={onEditNote}
-                      onDelete={onDeleteNote}
-                      onTogglePin={onTogglePin}
-                      onToggleChecklistItem={onToggleChecklistItem}
-                      onDuplicate={onDuplicateNote}
-                      onExportSingle={onExportNote}
-                    />
-                  ))}
-                </div>
-              </div>
+                  {/* Other Notes Section */}
+                  <div className="space-y-3">
+                    {activeFilter === 'all' && pinnedNotes.length > 0 && (
+                      <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Other Notes ({otherNotes.length})
+                      </h3>
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {(activeFilter === 'all' && pinnedNotes.length > 0
+                        ? otherNotes
+                        : filteredNotes
+                      ).map((note) => (
+                        <NoteCard
+                          key={note.id}
+                          note={note}
+                          onEdit={onEditNote}
+                          onDelete={onDeleteNote}
+                          onTogglePin={onTogglePin}
+                          onToggleChecklistItem={onToggleChecklistItem}
+                          onDuplicate={onDuplicateNote}
+                          onExportSingle={onExportNote}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </main>
